@@ -1,6 +1,7 @@
 const exress = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const { globalErrorhandler } = require("./utils/globalErrorHandler");
 const app = exress();
 /**
  * todo All middleare
@@ -14,8 +15,6 @@ app.use(exress.static("public"));
 const apiVersion = process.env.BASE_URL;
 app.use(`/api/v1`, require("./routes/index"));
 // error handaling middleware
-app.use((error, req, res, next) => {
-  console.log("error from global error middleware", error);
-});
+app.use(globalErrorhandler);
 
 module.exports = { app };
