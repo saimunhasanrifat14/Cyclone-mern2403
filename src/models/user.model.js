@@ -1,6 +1,7 @@
+require("dotenv").config();
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-
+const jwt = require("jsonwebtoken");
 const { customError } = require("../utils/customError");
 const { Schema, Types } = mongoose;
 
@@ -22,7 +23,9 @@ const userSchema = new Schema({
     type: String,
     trim: true,
     unique: true,
-    required: true,
+  },
+  phoneNumber: {
+    type: Number,
   },
   password: {
     type: String,
@@ -131,5 +134,44 @@ userSchema.pre("save", async function (next) {
   }
   next();
 });
+
+// generate accesToken method
+userSchema.methods.generateAccesToken = async function () {
+  return await jwt.sign(
+    {
+      userId: this._id,
+      email: this.email,
+      role: this.role,
+    },
+    process.env.ACCESTOKEN_SECRET,
+    { expiresIn: process.env.ACCESTOKEN_EXPIRE }
+  );
+};
+
+// compare hash password
+userSchema.methods.compareHashPassword = async function (humanPass) {
+  return await bcrypt.compare(humanPass, this.password);
+};
+// generate RefreshToken method
+
+userSchema.methods.generateRefreshToken = async function () {
+  return await jwt.sign(
+    {
+      userId: this._id,
+    },
+    process.env.REFRESHTOKEN_SECRET,
+    { expiresIn: process.env.REFRESHTOKEN_EXPIRE }
+  );
+};
+
+// verify AccesToken Token
+userSchema.methods.verifyAccesToken = function (token) {
+  return jwt.verify(token, process.env.ACCESTOKEN_SECRET);
+};
+
+// verify RefreshToken Token
+userSchema.methods.verifyRefreshToken = function (token) {
+  return jwt.verify(token, process.env.REFRESHTOKEN_SECRET);
+};
 
 module.exports = mongoose.model("User", userSchema);

@@ -2,11 +2,21 @@ const Joi = require("joi");
 const { customError } = require("../utils/customError");
 
 const userValidationSchema = Joi.object({
-  firstName: Joi.string().required().trim().empty().messages({
+  firstName: Joi.string().trim().empty().messages({
     "string.empty": "Name is required.",
-    "any.required": "Name is required.",
     "string.trim": "Name fill with extra spaces",
   }),
+  phoneNumber: Joi.string()
+    .optional()
+    .trim()
+    .pattern(/^(?:\+880|880|0)1[3-9]\d{8}$/)
+    .messages({
+      "string.pattern.base":
+        "Phone number must be a valid Bangladeshi number (e.g. 01XXXXXXXXX, 8801XXXXXXXXX, or +8801XXXXXXXXX)",
+      "string.base": "Phone number must be a string",
+      "string.empty": "Phone number cannot be empty",
+    }),
+
   email: Joi.string()
     .trim()
     .empty()
