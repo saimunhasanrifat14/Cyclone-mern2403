@@ -86,3 +86,70 @@ exports.RegistrationTemplate = (
 
     `;
 };
+
+// reset password email template
+exports.resetPasswordEmailTemplate = (
+  firstName,
+  verifyLink,
+  otp,
+  expireTime
+) => {
+  return `
+  
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+      padding: 20px;
+      color: #333;
+    }
+    .container {
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 8px;
+      max-width: 600px;
+      margin: auto;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    .btn {
+      background-color: #007bff;
+      color: #ffffff !important;
+      padding: 12px 20px;
+      text-decoration: none;
+      border-radius: 5px;
+      display: inline-block;
+      margin-top: 20px;
+    }
+    .footer {
+      margin-top: 30px;
+      font-size: 13px;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Hello, ${firstName} 👋</h2>
+    <p>You recently requested to reset your password. Please use the OTP and link below to complete the process:</p>
+
+    <p><strong>🔐 One-Time Password (OTP):</strong> <code style="font-size: 18px;">${otp}</code></p>
+    
+    <p><strong>📎 Reset Link:</strong></p>
+    <p><a class="btn" href="${verifyLink}">Reset Your Password</a></p>
+
+    <p>This link and OTP will expire in <strong>${expireTime}</strong>.</p>
+
+    <p>If you didn't request a password reset, you can safely ignore this email.</p>
+
+    <div class="footer">
+      <p>Thank you,<br>The Support Team</p>
+    </div>
+  </div>
+</body>
+</html>
+
+  `;
+};
