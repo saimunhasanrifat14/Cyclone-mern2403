@@ -11,7 +11,6 @@ const {
 
 const crypto = require("crypto");
 const { log } = require("console");
-const { access } = require("fs");
 
 // registration user
 exports.registration = asynchandeler(async (req, res) => {
@@ -192,4 +191,21 @@ exports.getMe = asynchandeler(async (req, res) => {
     throw new customError(401, "User not Found!!");
   }
   apiResponse.sendSucess(res, 200, "User Retrive Succesfully", findUser);
+});
+
+// refreshtoken
+exports.getRefreshToken = asynchandeler(async (req, res) => {
+  const token = req.headers.cookie.replace("refreshToken=", " ");
+  console.log(token);
+
+  if (!token) {
+    throw new customError(401, "Token Not found !!");
+  }
+  const findUser = await User.findOne({ refreshToken: token });
+  const accessToken = findUser.generateAccesToken();
+  apiResponse.sendSucess(res, 200, "Login Succesfull", {
+    accessToken: accessToken,
+    userName: findUser.firstName,
+    email: findUser.email,
+  });
 });

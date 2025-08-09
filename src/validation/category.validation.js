@@ -18,12 +18,43 @@ const categoryValidationSchema = Joi.object({
 exports.validateCategory = async (req) => {
   try {
     const value = await categoryValidationSchema.validateAsync(req.body);
+
+    const allowedMimeTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/jpg",
+      "image/webp",
+  
+    ];
+    // Check MIME type
+
+    if (!allowedMimeTypes.includes(req?.files?.image[0]?.mimetype)) {
+      throw new customError("Only JPG, JPEG, and PNG image files are allowed.");
+    }
+    // console.log(req.files);
+
+    if (req.files?.image?.length == 0) {
+      throw new customError(401, "Image Not Found");
+    }
+    // console.log(req?.files?.image[0]?.size);
+    if (req?.files?.image[0]?.size >= 5000) {
+      throw new customError(401, "image size below 5MB");
+    }
+
     return value;
   } catch (error) {
-    console.log("Error from validateCategory:", error.details[0].message);
-    throw new customError(
-      400,
-      `Category Validation Failed: ${error.details[0].message}`
-    );
+    if (error.details) {
+      console.log("Error from validateCategory:", error.details[0].message);
+      throw new customError(
+        400,
+        `Category Validation Failed: ${error.details[0].message}`
+      );
+    } else {
+      console.log("Error from validateCategory:", error);
+      throw new customError(
+        400,
+        `Category Validation Failed: ${error.message}`
+      );
+    }
   }
 };

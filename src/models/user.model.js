@@ -120,8 +120,7 @@ const userSchema = new Schema({
 // schema middleware
 userSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
-    const saltPassword = await bcrypt.hash(this.password, 10);
-    this.password = saltPassword;
+    this.password = await bcrypt.hash(this.password, 10);
   }
   next();
 });
