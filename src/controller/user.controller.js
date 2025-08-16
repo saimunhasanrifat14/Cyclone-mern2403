@@ -3,23 +3,26 @@ const { apiResponse } = require("../utils/apiResponse");
 const { customError } = require("../utils/customError");
 const { asynchandeler } = require("../utils/asynchandeler");
 const { valdateUser } = require("../validation/user.validation");
-const { emailSend } = require("../helper/helper");
+const { emailSend, smsSend } = require("../helper/helper");
 const {
   RegistrationTemplate,
   resetPasswordEmailTemplate,
 } = require("../template/Templete");
-
 const crypto = require("crypto");
-const { log } = require("console");
 
 // registration user
 exports.registration = asynchandeler(async (req, res) => {
   const value = await valdateUser(req);
-  const { firstName, email, password } = value;
+  const { firstName, email, password, phoneNumber } = value;
+  if (email == undefined && phoneNumber == undefined) {
+    throw new customError(401, " email/phoneNumber Required !! ");
+  }
+
   //save the user info into database
   const user = await new User({
     firstName,
-    email,
+    email: email || null,
+    phoneNumber: phoneNumber || null,
     password,
   }).save();
 
@@ -28,15 +31,29 @@ exports.registration = asynchandeler(async (req, res) => {
   }
 
   const randomNumber = crypto.randomInt(100000, 999999);
-  const expireTime = Date.now() + 10 * 60 * 60 * 1000;
-  const verifyLink = `http://forn.com/verify-email/${email}`;
-  const template = RegistrationTemplate(
-    firstName,
-    verifyLink,
-    randomNumber,
-    expireTime
-  );
-  await emailSend(email, template);
+  const expireTime = Date.now() + 1 * 60 * 60 * 1000;
+  if (user.email) {
+    const verifyLink = `http://forn.com/verify/${email}`;
+    const template = RegistrationTemplate(
+      firstName,
+      verifyLink,
+      randomNumber,
+      expireTime
+    );
+    await emailSend(email, template);
+  }
+
+  // phone
+  if (user.phoneNumber) {
+    const verifyLink = `http://forn.com/verify/${phoneNumber}`;
+    const smsbody = `Hi ${user.firstName}, complete your registration here: ${verifyLink}
+This link will expire in ${expireTime}.`;
+    const smsInfo = await smsSend(phoneNumber, smsbody);
+    if (smsInfo.response_code !== 202) {
+      console.log("Sms not send", smsInfo);
+    }
+  }
+
   user.resetPasswordOtp = randomNumber;
   user.resetPasswordExpireTime = expireTime;
   await user.save();
@@ -53,6 +70,16 @@ exports.login = asynchandeler(async (req, res) => {
   const finduser = await User.findOne({
     $or: [{ email: email }, { phoneNumber: phoneNumber }],
   });
+
+  
+  if(!finduser.isEmailVerified  && !finduser.isPhoneVerified){
+    if(finduser.email){
+      //send email
+      return res.status(301).redirect('')
+    }
+  }
+
+
   const passwordIsCorrect = await finduser.compareHashPassword(password);
   if (!passwordIsCorrect) {
     throw new customError(400, "Your Password or Email incorrect");
@@ -84,25 +111,32 @@ exports.login = asynchandeler(async (req, res) => {
 
 // email verification
 exports.emailVerification = asynchandeler(async (req, res) => {
-  const { otp, email } = req.body;
+  const { otp, email, phoneNumber } = req.body;
   if (!otp && !email) {
     throw new customError("401", "Otp or mail Not found");
   }
-  const findUser = await User.findOne({
-    $and: [
-      { email: email },
-      { resetPasswordOtp: otp },
-      { resetPasswordExpireTime: { $gt: Date.now() } },
-    ],
-  });
+  const findUser = await User.findOne({ $or: [{ email }, { phoneNumber }] });
+  if(findUser.resetPasswordExpireTime > Date.now() || findUser.resetPasswordOtp == otp){
+    apiResponse.sendSucess(res,401, "Time Expires and otp invalid" , null)
+  }
 
   if (!findUser) {
     throw new customError(401, "Otp Or Time expire try again !!");
   }
-  findUser.resetPasswordExpireTime = null;
-  findUser.resetPasswordOtp = null;
-  findUser.isEmailVerified = true;
-  apiResponse.sendSucess(res, 200, "Email Verification Sucessfully ", {
+
+  if (findUser.email) {
+    findUser.resetPasswordExpireTime = null;
+    findUser.resetPasswordOtp = null;
+    findUser.isEmailVerified = true;
+  } else {
+    findUser.resetPasswordExpireTime = null;
+    findUser.resetPasswordOtp = null;
+    findUser.isPhoneVerified = true;
+  }
+
+  await findUser.save();
+
+  apiResponse.sendSucess(res, 200, "Email/phone Verification Sucessfully ", {
     email: findUser.email,
     firstName: findUser.firstName,
   });
