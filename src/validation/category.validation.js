@@ -37,11 +37,11 @@ exports.validateCategory = async (req) => {
       throw new customError(401, "Image Not Found");
     }
     // console.log(req?.files?.image[0]?.size);
-    if (req?.files?.image[0]?.size >= 5000) {
+    if (req?.files?.image[0]?.size >= 10 * 1024 * 1024) {
       throw new customError(401, "image size below 5MB");
     }
 
-    return value;
+    return {name: value.name , image: req?.files?.image[0]};
   } catch (error) {
     if (error.details) {
       console.log("Error from validateCategory:", error.details[0].message);

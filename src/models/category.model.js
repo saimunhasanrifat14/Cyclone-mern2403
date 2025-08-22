@@ -8,11 +8,7 @@ const categorySchema = new Schema(
       required: true,
       trim: true,
     },
-    image: {
-      type: String,
-      trim: true,
-      required: true,
-    },
+    image: {},
     slug: {
       type: String,
 
