@@ -1,0 +1,19 @@
+2xx Successful responses:
+201 Created
+204 No Content
+
+3xx Redirection messages:
+301 Moved Permanently,
+302 Found,
+304 Not Modified
+
+4xx Client error responses:
+400 Bad Request
+401 Unauthorized
+404 Not Found
+403 Forbidden
+
+5xx Server error responses:
+500 Internal Server Error
+503 Service Unavailable
+504 Gateway Timeout
