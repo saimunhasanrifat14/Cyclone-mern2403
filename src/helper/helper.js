@@ -12,12 +12,16 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-exports.emailSend = async (email, template) => {
+exports.emailSend = async (
+  email,
+  template,
+  subject = "Confrim Registration"
+) => {
   try {
     const info = await transporter.sendMail({
       from: "Cyclon",
       to: email,
-      subject: "Confrim Registration",
+      subject,
       html: template,
     });
 
@@ -29,20 +33,18 @@ exports.emailSend = async (email, template) => {
 };
 
 // sms sender
-exports.smsSend = async (phoneNumber , message)=> {
+exports.smsSend = async (phoneNumber, message) => {
   try {
-    const response =  await axios.post(process.env.API_URL , {
-      api_key:process.env.API_KEY, 
+    const response = await axios.post(process.env.API_URL, {
+      api_key: process.env.API_KEY,
       senderid: process.env.SENDER_ID,
-      number:Array.isArray(phoneNumber) ? phoneNumber.join(',') : phoneNumber,
-  
-      message:message
-    })
+      number: Array.isArray(phoneNumber) ? phoneNumber.join(",") : phoneNumber,
+
+      message: message,
+    });
     return response.data;
   } catch (error) {
-    console.log('error from send sms' , error);
-    throw new customError(500 , "smsSend function"+ error)
+    console.log("error from send sms", error);
+    throw new customError(500, "smsSend function" + error);
   }
-}
-
-
+};

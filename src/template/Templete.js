@@ -153,3 +153,117 @@ exports.resetPasswordEmailTemplate = (
 
   `;
 };
+
+// order template
+exports.orderTemplate = (cart, finalAmount, charge) => {
+  return `
+  <!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Order Confirmation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f6f6f6;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      color: #333333;
+    }
+
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    .summary-table th, .summary-table td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .summary-table th {
+      background-color: #f2f2f2;
+    }
+
+    .totals {
+      margin-top: 20px;
+    }
+
+    .totals p {
+      font-size: 16px;
+      margin: 5px 0;
+    }
+
+    .totals p strong {
+      float: right;
+    }
+
+    .footer {
+      margin-top: 30px;
+      text-align: center;
+      font-size: 14px;
+      color: #999999;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Thank you for your order!</h2>
+    <p>We've received your order and it's being processed. Below is the summary:</p>
+
+    <!-- Optional: Order summary table -->
+    <table class="summary-table">
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Qty</th>
+          <th>Price</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Repeat this block for each item -->
+        ${cart.items.map(
+          (item) =>
+            `<tr>
+            <td>${item.product ? item.product.name : item.variant.name}</td>
+            <td>${item.quantity}</td>
+            <td>${item.totalPrice}</td>
+          </tr>`
+        )}
+      
+        
+      </tbody>
+    </table>
+
+    <div class="totals">
+      <p>Total Products: <strong>${cart.totalQuantity}</strong></p>
+      <p>Total Amount: <strong>${cart.finalAmount}</strong></p>
+      <p>Delivery Charge: <strong>-${charge}</strong></p>
+     
+      <hr>
+      <p><strong>Final Amount: <span style="color: green;">${finalAmount}</span></strong></p>
+    </div>
+
+    <div class="footer">
+      <p>If you have any questions, feel free to contact our support team.</p>
+    </div>
+  </div>
+</body>
+</html>
+
+  `;
+};
