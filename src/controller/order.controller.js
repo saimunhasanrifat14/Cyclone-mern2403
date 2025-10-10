@@ -11,6 +11,7 @@ const crypto = require("crypto");
 const invoiceModel = require("../models/invoice.model");
 const SSLCommerzPayment = require("sslcommerz-lts");
 const { orderTemplate } = require("../template/Templete");
+const { smsSend, emailSend } = require("../helper/helper");
 
 const store_id = process.env.SSLC_STORE_ID;
 const store_passwd = process.env.SSLC_STORE_PASSWORD;
@@ -138,16 +139,31 @@ exports.createOrder = asynchandeler(async (req, res) => {
       order.orderStatus = "Pending";
       order.invoiceId = invoice.invoiceId;
       order.paymentGatewayData = Response;
-      apiResponse.sendSucess(res, 201, "easyCheckouturl", {
-        url: apiResponse.GatewayPageURL,
+      // send Confirmed sms
+      if (shippingInfo.email) {
+        const template = orderTemplate(cart, order.finalAmount, charge);
+        sendEmail(shippingInfo.email, template, "Order Confrim");
+      }
+      if (shippingInfo.phone) {
+        const res = await smsSend(shippingInfo.phone, "order confrim");
+        console.log(res);
+      }
+      await order.save();
+      return apiResponse.sendSucess(res, 201, "easyCheckouturl", {
+        url: Response.GatewayPageURL,
       });
     }
-
     // send Confirmed sms
     if (shippingInfo.email) {
       const template = orderTemplate(cart, order.finalAmount, charge);
-      await emailSend(shippingInfo.email, template, "Order Confrim");
+      sendEmail(shippingInfo.email, template, "Order Confrim");
     }
+    if (shippingInfo.phone) {
+      const res = await smsSend(shippingInfo.phone, "order confrim");
+      console.log(res);
+    }
+    await order.save();
+    apiResponse.sendSucess(res, 201, "order place sucessfull", order);
   } catch (error) {
     console.log(error);
     const stockAdjustPromise = [];
@@ -177,3 +193,9 @@ exports.createOrder = asynchandeler(async (req, res) => {
     await Promise.all(stockAdjustPromise);
   }
 });
+
+// send email
+const sendEmail = async (email, template, msg) => {
+  const info = await emailSend(email, template, msg);
+  console.log(info);
+};

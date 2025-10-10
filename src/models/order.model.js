@@ -72,10 +72,7 @@ const orderSchema = new mongoose.Schema(
       type: String, // sslcommerz transaction_id
       default: null,
     },
-    valId: {
-      type: String, // sslcommerz val_id used to verify
-      default: null,
-    },
+
     currency: {
       type: String,
       default: "BDT",
