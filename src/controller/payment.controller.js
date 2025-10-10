@@ -30,5 +30,5 @@ exports.canclePayment = asynchandeler(async (req, res) => {
 });
 exports.ipnPayment = asynchandeler(async (req, res) => {
   console.log(req.body);
-  return res.redirect("https://www.npmjs.com/package/chalk/v/4.1.2");
+  apiResponse.sendSucess(res, 200, "ipn notification", req.body);
 });
