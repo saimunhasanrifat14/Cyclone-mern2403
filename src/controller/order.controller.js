@@ -64,7 +64,6 @@ exports.createOrder = asynchandeler(async (req, res) => {
     order = new orderModel({
       user: user,
       guestId: guestId,
-      items: cart.items,
       shippingInfo: shippingInfo,
       deliveryCharge: deliveryCharge,
     });
@@ -76,6 +75,31 @@ exports.createOrder = asynchandeler(async (req, res) => {
       .randomUUID()
       .split("-")[0]
       .toLocaleUpperCase()}`;
+
+    // item add
+    order.items = cart.items.map((item) => {
+      const plainItem = item.toObject();
+      if (plainItem.product && typeof plainItem.product === "object") {
+        plainItem.product = {
+          _id: plainItem.product._id,
+          name: plainItem.product.name,
+          price: plainItem.product.retailPrice,
+          image: plainItem.product.retailPrice.image,
+          totalSales: plainItem.product.retailPrice.totalSales,
+        };
+      }
+
+      if (plainItem.variant && typeof plainItem.variant === "object") {
+        plainItem.variant = {
+          _id: plainItem.variant._id,
+          name: plainItem.variant.variantName,
+          price: plainItem.variant.retailPrice,
+          image: plainItem.variant.image,
+          totalSales: plainItem.variant.totalSales,
+        };
+      }
+      return plainItem;
+    });
 
     // update order filed
     order.finalAmount = Math.round(cart.finalAmount + charge);
@@ -199,3 +223,14 @@ const sendEmail = async (email, template, msg) => {
   const info = await emailSend(email, template, msg);
   console.log(info);
 };
+
+// get all order
+exports.getAllOrder = asynchandeler(async (req, res) => {
+  const allorder = await orderModel
+    .find({})
+    .populate("deliveryCharge items.variant items.product")
+    .sort({ createdAt: -1 });
+
+  if (!allorder.length) throw new customError(500, "order not Found !!");
+  apiResponse.sendSucess(res, 200, "ordere retrive succesfully", allorder);
+});

@@ -14,21 +14,7 @@ const orderSchema = new mongoose.Schema(
     },
 
     // ORDER ITEMS SNAPSHOT
-    items: [
-      // {
-      //   productId: {
-      //     type: mongoose.Schema.Types.ObjectId,
-      //     ref: "Product",
-      //     required: true,
-      //   },
-      //   name: String,
-      //   quantity: Number,
-      //   totalPrice: Number,
-      //   retailPrice: Number,
-      //   size: String,
-      //   color: String,
-      // },
-    ],
+    items: [],
 
     // SHIPPING INFO
     shippingInfo: {
@@ -42,7 +28,7 @@ const orderSchema = new mongoose.Schema(
     // DELIVERY CHARGE
     deliveryCharge: {
       type: mongoose.Types.ObjectId,
-      ref: "Delivery",
+      ref: "deliveryCharge",
     },
 
     discountAmount: {
