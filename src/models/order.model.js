@@ -71,7 +71,7 @@ const orderSchema = new mongoose.Schema(
     // ORDER STATUS
     orderStatus: {
       type: String,
-      enum: ["Pending", "Hold", "Confirmed", "Packaging", "CourierPending"],
+  
       default: "Pending",
     },
 
@@ -93,14 +93,7 @@ const orderSchema = new mongoose.Schema(
         default: "pending",
       },
     },
-    orderType: {
-      type: String,
-      default: "complete", // complete or partialit
-    },
-    isAutoPlaced: {
-      type: Boolean,
-      default: false,
-    },
+
     followUp: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

@@ -12,6 +12,7 @@ const invoiceModel = require("../models/invoice.model");
 const SSLCommerzPayment = require("sslcommerz-lts");
 const { orderTemplate } = require("../template/Templete");
 const { smsSend, emailSend } = require("../helper/helper");
+const { instance } = require("../helper/axios");
 
 const store_id = process.env.SSLC_STORE_ID;
 const store_passwd = process.env.SSLC_STORE_PASSWORD;
@@ -84,8 +85,8 @@ exports.createOrder = asynchandeler(async (req, res) => {
           _id: plainItem.product._id,
           name: plainItem.product.name,
           price: plainItem.product.retailPrice,
-          image: plainItem.product.retailPrice.image,
-          totalSales: plainItem.product.retailPrice.totalSales,
+          image: plainItem.product.image,
+          totalSales: plainItem.product.totalSales,
         };
       }
 
@@ -233,4 +234,151 @@ exports.getAllOrder = asynchandeler(async (req, res) => {
 
   if (!allorder.length) throw new customError(500, "order not Found !!");
   apiResponse.sendSucess(res, 200, "ordere retrive succesfully", allorder);
+});
+
+// update order information
+exports.updateOrderInfo = asynchandeler(async (req, res) => {
+  const { id, status, shippingInfo } = req.body;
+  const updateinfo = await orderModel.findOneAndUpdate(
+    { _id: id },
+    {
+      orderStatus: status,
+      shippingInfo: { ...shippingInfo },
+    },
+    { new: true }
+  );
+
+  if (!updateinfo) throw new customError(401, "not updated info ");
+  apiResponse.sendSucess(res, 200, "order updated sucessfully", updateinfo);
+});
+
+// get all order status
+exports.OrderStatus = asynchandeler(async (req, res) => {
+  const updateinfo = await orderModel.aggregate([
+    {
+      $group: {
+        _id: "$orderStatus",
+        count: { $sum: 1 },
+        totalAmount: { $sum: "$finalAmount" },
+        averageAmount: { $avg: "$finalAmount" },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        name: "$_id",
+        count: 1,
+        totalAmount: 1,
+        averageAmount: 1,
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        orderStatusInfo: {
+          $push: {
+            name: "$name",
+            count: "$count",
+            total: "$totalAmount",
+            averageAmount: "$averageAmount",
+          },
+        },
+        totalOrder: { $sum: "$count" },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        orderStatusInfo: 1,
+        totalOrder: 1,
+      },
+    },
+  ]);
+
+  if (!updateinfo || updateinfo.length === 0) {
+    throw new customError(401, "No order status information found");
+  }
+
+  apiResponse.sendSucess(
+    res,
+    200,
+    "Order status retrieved successfully",
+    updateinfo[0]
+  );
+});
+
+// get all CourierPending order
+exports.CourierPending = asynchandeler(async (req, res) => {
+  const updateinfo = await orderModel.aggregate([
+    {
+      $match: {
+        orderStatus: "CourierPending",
+      },
+    },
+    {
+      $project: {
+        paymentGatewayData: 0,
+      },
+    },
+  ]);
+
+  if (!updateinfo || updateinfo.length === 0) {
+    throw new customError(401, "No order status information found");
+  }
+
+  apiResponse.sendSucess(
+    res,
+    200,
+    "Order CourierPending  successfully",
+    updateinfo[0]
+  );
+});
+
+// send order into courier
+exports.Couriersend = asynchandeler(async (req, res) => {
+  const { id } = req.body;
+  const orderinfo = await orderModel.findById(id);
+  const { shippingInfo, finalAmount, transactionId } = orderinfo;
+  const cData = await instance.post("/create_order", {
+    invoice: transactionId,
+    recipient_name: shippingInfo.fullName,
+    recipient_phone: shippingInfo.phone,
+    recipient_address: shippingInfo.address,
+    cod_amount: finalAmount,
+  });
+  const { consignment } = cData.data;
+  orderinfo.courier.name = "steadFast";
+  orderinfo.courier.trackingId = consignment.tracking_code;
+  orderinfo.courier.rawResponse = consignment;
+  orderinfo.courier.status = consignment.status;
+  orderinfo.orderStatus = consignment.status;
+  await orderinfo.save();
+  apiResponse.sendSucess(res, 200, "send courier sucesfully", orderinfo);
+});
+
+exports.webhook = asynchandeler(async (req, res) => {
+  const { invoice, status } = req.body;
+  console.log(req.body);
+  console.log(req.headers);
+  res.status(200).json({
+    status: "success",
+    message: "Webhook received successfully.",
+  });
+  return;
+  try {
+    const orderinfo = await orderModel.findOne({ transactionId: invoice });
+    orderinfo.courier.rawResponse = req.body;
+    orderinfo.courier.status = status;
+    orderinfo.orderStatus = status;
+    await orderinfo.save();
+    res.status(200).json({
+      status: "success",
+      message: "Webhook received successfully.",
+    });
+  } catch (error) {
+    return res.status(200).json({
+      status: "error",
+      message: "Invalid consignment ID.",
+    });
+  }
 });

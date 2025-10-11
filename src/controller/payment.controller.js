@@ -2,10 +2,17 @@ const { apiResponse } = require("../utils/apiResponse");
 const { asynchandeler } = require("../utils/asynchandeler");
 const { customError } = require("../utils/customError");
 const orderModel = require("../models/order.model");
+const SSLCommerzPayment = require("sslcommerz-lts");
+const store_id = process.env.SSLC_STORE_ID;
+const store_passwd = process.env.SSLC_STORE_PASSWORD;
+const is_live = process.env.NODE_ENV == "developement" ? false : true;
 // sucess
 exports.successPayment = asynchandeler(async (req, res) => {
-  console.log(req.body);
-  const { tran_id, status } = req.body;
+  const { val_id } = req.body;
+  const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live);
+  const validateData = await sslcz.validate({ val_id });
+
+  const { status, tran_id } = validateData;
 
   await orderModel.findOneAndUpdate(
     {
@@ -14,10 +21,11 @@ exports.successPayment = asynchandeler(async (req, res) => {
     {
       paymentStatus: status == "VALID" && "success",
       transactionId: tran_id,
-      paymentGatewayData: req.body,
+      paymentGatewayData: validateData,
+      orderStatus: "Confirmed",
     }
   );
-  return res.redirect("https://www.npmjs.com/package/chalk/v/4.1.2");
+  apiResponse.sendSucess(res, 200, "payment sucess", null);
 });
 
 exports.failPayment = asynchandeler(async (req, res) => {
