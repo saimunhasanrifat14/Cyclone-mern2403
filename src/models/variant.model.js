@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const { Schema, Types } = mongoose;
 const slugify = require("slugify");
+const { customError } = require("../utils/customError");
 
 const variantSchema = new Schema(
   {
@@ -73,7 +74,8 @@ variantSchema.pre("save", async function (next) {
 variantSchema.pre("save", async function (next) {
   const findVariant = await this.constructor.findOne({ slug: this.slug });
   if (findVariant && findVariant._id.toString() !== this._id.toString()) {
-    throw new Error(
+    throw new customError(
+      401,
       "Variant with the same slug already exists. Please choose another name."
     );
   }

@@ -51,10 +51,7 @@ const userSchema = new Schema({
   role: {
     type: Types.ObjectId,
     ref: "Role",
-  },
-  permission: {
-    type: Types.ObjectId,
-    ref: "Permission",
+    default: null,
   },
   region: {
     type: String,
