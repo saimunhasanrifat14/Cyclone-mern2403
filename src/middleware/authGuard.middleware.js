@@ -1,8 +1,11 @@
 const { customError } = require("../utils/customError");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user.model");
+require("../models/permission.model");
 exports.authGuard = async (req, _, next) => {
-  const token = req.headers.authorization || req.body.token;
+  const token =
+    req.headers?.authorization?.replace("Bearer ", "") || req.body.token;
+  const refreshToken = req?.headers?.cookie?.replace("refreshToken=", "");
   if (token) {
     const decodedToken = jwt.verify(token, process.env.ACCESTOKEN_SECRET);
 
@@ -10,16 +13,18 @@ exports.authGuard = async (req, _, next) => {
       throw new customError(401, "token invalid");
     }
 
-    const findUser = await User.findById(decodedToken.userId);
+    const findUser = await User.findOne({ _id: decodedToken.userId })
+      .populate("permissions.permissionId")
+      .populate("role")
+      .select(
+        "-password -isEmailVerified -isPhoneVerified -resetPasswordExpireTime -resetPasswordOtp -twoFactorEnabled -isBlocked  -cart -wishList -refreshToken"
+      );
+
     if (!findUser) {
-      throw new customError(401, "User not Found!!");
-    } else {
-      let obj = {};
-      obj.id = findUser._id;
-      obj.email = findUser.email;
-      req.user = obj;
-      next();
+      throw new customError(401, "User Not Found!!");
     }
+    req.user = findUser;
+    next();
   } else {
     throw new customError(401, "Token Not Found");
   }

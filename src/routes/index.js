@@ -16,6 +16,6 @@ _.use("/order", require("./api/order.api"));
 _.use("/payment", require("./api/payment.api"));
 _.use("/permission", require("./api/permission.api"));
 _.use("/role", require("./api/role.api"));
-_.use("/userpermission", require("./api/userpermisson.api"));
+_.use("/user", require("./api/adduser.api"));
 
 module.exports = _;

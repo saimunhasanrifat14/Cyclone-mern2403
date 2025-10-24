@@ -32,10 +32,7 @@ const userSchema = new Schema({
     trim: true,
     required: true,
   },
-  image: {
-    type: String,
-    trim: true,
-  },
+  image: {},
   adress: {
     type: String,
     trim: true,
@@ -48,11 +45,26 @@ const userSchema = new Schema({
     type: Boolean,
     default: false,
   },
-  role: {
-    type: Types.ObjectId,
-    ref: "Role",
-    default: null,
-  },
+  role: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Role",
+    },
+  ],
+  permissions: [
+    {
+      permissionId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Permisson",
+      },
+      actions: [
+        {
+          type: String,
+          enum: ["view", "add", "edit", "delete"],
+        },
+      ],
+    },
+  ],
   region: {
     type: String,
     trim: true,
@@ -107,6 +119,10 @@ const userSchema = new Schema({
   resetPasswordExpireTime: Date,
   twoFactorEnabled: Boolean,
   isBlocked: Boolean,
+  createdBy: {
+    type: Types.ObjectId,
+    ref: "User",
+  },
   refreshToken: {
     type: String,
     trim: true,

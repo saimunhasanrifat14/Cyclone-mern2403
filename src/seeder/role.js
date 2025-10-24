@@ -24,15 +24,15 @@ const seedPermission = async () => {
     const roleModelData = [
       {
         name: "admin",
-        permission: allpermisson.map((p) => p._id),
       },
       {
         name: "manager",
-        permission: allpermisson.filter((p) => {
-          if (p.name == "brand" || p.name == "coupon" || p.name == "category") {
-            return p._id;
-          }
-        }),
+      },
+      {
+        name: "salesman",
+      },
+      {
+        name: "user",
       },
     ];
 

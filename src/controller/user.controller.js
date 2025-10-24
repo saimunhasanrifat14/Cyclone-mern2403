@@ -68,34 +68,34 @@ exports.login = asynchandeler(async (req, res) => {
   const value = await valdateUser(req);
   const { email, phoneNumber, password } = value;
   const finduser = await User.findOne({
-    $or: [{ email: email }, { phoneNumber: phoneNumber }],
+    $or: [{ email }, { phoneNumber }],
   });
 
-  if (!finduser.isEmailVerified && !finduser.isPhoneVerified) {
-    const randomNumber = crypto.randomInt(100000, 999999);
-    const expireTime = Date.now() + 1 * 60 * 60 * 1000;
-    if (finduser.email) {
-      const verifyLink = `http://forn.com/verify/${email}`;
-      const template = RegistrationTemplate(
-        finduser.firstName,
-        verifyLink,
-        randomNumber,
-        expireTime
-      );
-      await emailSend(email, template);
-      return res.status(301).redirect(verifyLink);
-    }
-    // phone
-    if (finduser.phoneNumber) {
-      const verifyLink = `http://forn.com/verify/${phoneNumber}`;
-      const smsbody = `Hi ${finduser.firstName}, complete your registration here: ${verifyLink}
-This link will expire in ${expireTime}. otp is : ${randomNumber}`;
-      const smsInfo = await smsSend(phoneNumber, smsbody);
-      if (smsInfo.response_code !== 202) {
-        console.log("Sms not send", smsInfo);
-      }
-    }
-  }
+  //   if (!finduser.isEmailVerified && !finduser.isPhoneVerified) {
+  //     const randomNumber = crypto.randomInt(100000, 999999);
+  //     const expireTime = Date.now() + 1 * 60 * 60 * 1000;
+  //     if (finduser.email) {
+  //       const verifyLink = `http://forn.com/verify/${email}`;
+  //       const template = RegistrationTemplate(
+  //         finduser.firstName,
+  //         verifyLink,
+  //         randomNumber,
+  //         expireTime
+  //       );
+  //       await emailSend(email, template);
+  //       return res.status(301).redirect(verifyLink);
+  //     }
+  //     // phone
+  //     if (finduser.phoneNumber) {
+  //       const verifyLink = `http://forn.com/verify/${phoneNumber}`;
+  //       const smsbody = `Hi ${finduser.firstName}, complete your registration here: ${verifyLink}
+  // This link will expire in ${expireTime}. otp is : ${randomNumber}`;
+  //       const smsInfo = await smsSend(phoneNumber, smsbody);
+  //       if (smsInfo.response_code !== 202) {
+  //         console.log("Sms not send", smsInfo);
+  //       }
+  //     }
+  //   }
 
   const passwordIsCorrect = await finduser.compareHashPassword(password);
   if (!passwordIsCorrect) {

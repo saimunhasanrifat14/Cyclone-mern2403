@@ -9,6 +9,7 @@ const userValidationSchema = Joi.object({
   phoneNumber: Joi.string()
     .optional()
     .trim()
+    .allow(null, "")
     .pattern(/^(?:\+880|880|0)1[3-9]\d{8}$/)
     .messages({
       "string.pattern.base":
@@ -20,6 +21,7 @@ const userValidationSchema = Joi.object({
   email: Joi.string()
     .trim()
     .empty()
+    .allow(null, "")
     .pattern(new RegExp(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/))
     .messages({
       "string.empty": "Email is required.",
