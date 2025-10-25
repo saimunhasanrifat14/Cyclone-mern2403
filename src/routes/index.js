@@ -17,5 +17,6 @@ _.use("/payment", require("./api/payment.api"));
 _.use("/permission", require("./api/permission.api"));
 _.use("/role", require("./api/role.api"));
 _.use("/user", require("./api/adduser.api"));
+_.use("/banner", require("./api/banner.api"));
 
 module.exports = _;

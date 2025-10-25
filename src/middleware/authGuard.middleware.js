@@ -24,6 +24,7 @@ exports.authGuard = async (req, _, next) => {
       throw new customError(401, "User Not Found!!");
     }
     req.user = findUser;
+
     next();
   } else {
     throw new customError(401, "Token Not Found");
